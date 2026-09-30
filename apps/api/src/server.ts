@@ -74,7 +74,7 @@ export function buildServer(options?: ServerOptions): FastifyInstance {
         description: 'High-precision computer vision outbound order verification system',
         version: '1.0.0',
       },
-      servers: [{ url: 'http://localhost:4000' }],
+      servers: [{ url: '/' }],
     },
   });
 
