@@ -3,11 +3,13 @@
   "services": {
     "api": {
       "root": "apps/api",
-      "framework": "fastify"
+      "framework": "fastify",
+      "installCommand": "npm ci --include=dev"
     },
     "web": {
       "root": "apps/web",
-      "framework": "vite"
+      "framework": "vite",
+      "installCommand": "npm ci --include=dev"
     }
   },
   "rewrites": [
