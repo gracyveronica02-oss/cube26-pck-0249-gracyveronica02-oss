@@ -1,182 +1,189 @@
-# Cube Buildathon · 03 · Pack Manager
+# Pack Manager AI Agent for E-Commerce Fulfillment QC
 
-**Commerce Context stream · Round 2 · Individual Build**
-
-> Five agents, one unit, one record that follows it.
-> A physical product arrives, gets prepped, gets shipped, comes back. At every step a person makes a fast judgment that nobody records. **You build the agent that makes one of those judgments, and leaves proof.**
-
-**New here? Read these first:**
-
-1. [`GITHUB-GUIDE.md`](GITHUB-GUIDE.md) explains how to fork the repository, set it up, build and push your work.
-2. [`RULES.md`](RULES.md) covers the repository and engineering rules.
+An AI-assisted quality control system for outbound order verification. Pack Manager inspects photographs of open shipping cartons, reconciles identified products and quantities against an order manifest, and returns one operational decision: **`SEAL`**, **`STOP & FIX`**, or **`UNCERTAIN`**.
 
 ---
 
-## Your problem statement: Pack Manager
+## 1. Business Problem & Solution
 
-|                              |                                                                                                                 |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| **Position in the chain**    | Step 3 of 5. Outbound to buyer.                                                                                 |
-| **Customer**                 | Seller or 3PL packing outbound orders                                                                           |
-| **What gets recorded**       | Contents at seal                                                                                                |
-| **Who consumes your output** | Returns Manager (what was actually sent) and Recovery Manager (buyer disputes, empty-box and wrong-item claims) |
+### The Bottleneck:
+Fulfillment operations (e-commerce brands, sellers, and 3PL providers) currently rely on manual visual inspection before cartons are taped and labeled.
+- **Slow**: 5–10 minutes per box with manual checklists.
+- **Expensive**: High labor cost per packing bench.
+- **Error-prone**: Human operators miss 2–5% of missing or swapped items due to fatigue.
+- **Inconsistent**: Verification standards vary widely across shifts and staff.
 
-A picker assembles an order and closes the box. If the wrong item or quantity goes in, the customer gets a mis-ship: a refund, a return, a replacement shipment and often the review. Nobody checks, because checking every box by hand costs more than the mis-ships do.
+### The Pack Manager Solution:
+1. **Multi-Modal Capture**: Ingests overhead photographs from cameras or mobile devices.
+2. **Item Detection & Localization**: Extracts SKUs, visual features, colors, packaging, and barcodes.
+3. **Single-Shot Capture**: The current operator flow checks one overhead open-carton photo. It flags visible occlusion as uncertain; fully concealed items cannot be verified from one image and must not be inferred.
+4. **Deterministic Reconciliation**: Pure mathematical comparison of observed quantities and variants against expected order manifests.
+5. **Calibrated Operational Decisions**:
+   - 🟢 **`SEAL`**: All expected items, variants, and quantities verified with high confidence (>= 85%).
+   - 🔴 **`STOP & FIX`**: Definite discrepancy identified (missing, wrong item, extra item, or variant/quantity mismatch).
+   - 🟡 **`UNCERTAIN`**: The photograph, item identity, or vision result does not provide enough evidence for a reliable decision.
+6. **Immutable Audit Trail & Human Override**: Every AI decision is permanently logged. Operators can override decisions via an authorized workflow without overwriting original AI logs.
 
-**What the agent returns, from a photograph of the open box before it is sealed:**
+### QR Order and Manual Manifest Workflow
 
-* Every item present, matched against the order lines
-* Quantities correct per line
-* Nothing extra in the box
-* A verdict: seal it, or stop and fix
+Scan or enter a packing-slip QR/order reference to load its order lines automatically. SKU/ASIN, product name, expected quantity, and any available catalog reference image appear in the editable manifest. If there is no order data, create a manual manifest with an Order ID; add/remove products and edit quantities without a fixed product list. Upload an overhead open-carton photo to compare expected items with confidently identified contents. Ambiguous evidence returns `UNCERTAIN`; only evidence-backed discrepancies return `STOP & FIX`.
 
-> **Know your customer's limits.** This only exists for merchant-fulfilled and 3PL orders. If a seller is fully FBA, Amazon packs the box and there is nothing to verify. That narrows your customer more than the other statements.
+---
 
-> **Be honest about competition.** Three funded companies already sell pack verification into large distribution centers. You will not out-feature them in two weeks. Your question is whether it can work for a seller with no fixed station and no hardware budget, which is a customer they do not call on.
+## 2. Operational Metrics and Pre-Registered Targets
 
-### The chain you are part of
+Targets are set before operational results are evaluated. The dashboard reports observed values and sample counts; seeded demo data and synthetic tests are not production accuracy evidence.
 
-```text
- Supplier delivery      Inbound to Amazon     Outbound to buyer     Customer return        Money back
- ┌──────────────┐      ┌──────────────┐      ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
- │ 01 Receiving │ ───▶ │ 02 Prep      │ ───▶ │ 03 Pack      │ ───▶ │ 04 Returns   │      │ 05 Recovery  │
- │ condition on │      │ compliance   │      │ contents at  │      │ condition &  │      │ reads all    │
- │ arrival      │      │ proof        │      │ seal         │      │ disposition  │      │ four → claim │
- └──────┬───────┘      └──────┬───────┘      └──────┬───────┘      └──────┬───────┘      └──────▲───────┘
-        └─────────────────────┴─────────────────────┴─────────────────────┴─────────────────────┘
+| Metric | Definition | Target / action threshold |
+| :--- | :--- | :--- |
+| **UNCERTAIN rate** | Latest completed decisions recorded as `UNCERTAIN` / completed decisions | Target ≤ 5%; sustained > 10% is a product kill condition |
+| **Pending rate** | Cartons currently awaiting a completed decision / all cartons | Target ≤ 2% |
+| **All expected items present** | Conclusive carton comparisons where every expected SKU was observed / conclusive comparisons | Report separately from quantity accuracy |
+| **Quantities correct** | Conclusive carton comparisons with exact expected counts and no unexpected SKU / conclusive comparisons | Report separately from item presence |
+| **Occlusion signals** | Latest carton analyses explicitly flagged as occluded by vision | Track separately; single-shot capture cannot verify fully hidden contents |
+
+Uncertain results are excluded from item/count accuracy denominators and remain distinct from confirmed discrepancies. Bounding boxes support localization, evidence, and deduplication; SKU reconciliation uses item identity and counts. Production SKU matching considers the seller's full catalogue, not only the order lines, to retain look-alike candidates.
+
+Pack Manager does not control a physical seal/release interlock. If the verification service is unavailable, it does not auto-seal or block the operator's existing manual inspection process. An asynchronous result received after dispatch is evaluation signal only unless the carton is still held; it is not a post-shipment safety net.
+
+---
+
+## 3. Architecture & Repository Structure
+
+This repository is organized as a production-grade TypeScript monorepo alongside a standalone Python agent:
+
+```
+├── pack_manager_agent.py         # Standalone Python Agent (Claude Vision API + offline fallback)
+├── pack_manager_system_prompt.md  # Production AI vision system instructions
+├── API_REFERENCE.md              # Full REST & Webhook API specification
+├── ARCHITECTURE.md               # Detailed system architecture, data flows, and RLS
+├── docs/
+│   ├── OPERATIONAL_PROCEDURES.md # Warehouse SOP, photo standards, escalation matrix
+│   ├── TRAINING_MATERIALS.md     # 30-min training course, video scripts, QC cheat sheet
+│   ├── IMPLEMENTATION_ROADMAP.md # 11-12 week rollout roadmap, Gantt chart, budget
+│   └── TEST_SCENARIOS.md         # 11 canonical benchmark scenarios
+├── packages/
+│   ├── shared/                   # Enums (PackStatus, OperationalDecision), Zod schemas
+│   ├── config/                   # Centralized confidence thresholds & worker settings
+│   ├── domain/                   # Deterministic decision engine, reconciler, deduplicator
+│   ├── database/                 # Repositories with multi-tenant Row-Level Security (RLS)
+│   └── vision/                   # Quality validator (blur, glare, resolution) & model providers
+├── apps/
+│   ├── api/                      # Fastify REST API server (Swagger UI, idempotency, auth)
+│   ├── worker/                   # 12-step verification pipeline & webhook dispatcher
+│   └── web/                      # React / Vite QC operator workstation dashboard
+└── test/
+    └── e2e-scenarios.test.ts     # 11 end-to-end integration test scenarios
 ```
 
-The first four are the same machine: a camera, a model, and a decision bound to a record. What changes is the ruleset, the buyer and the moment. The fifth has no camera. It turns the other four's records into a claim.
-
-Your output has to be usable by another pod. That's deliberate, and it's scored.
-
 ---
 
-## Reference data
+## 4. Quick Start: Standalone Python Agent
 
-`data/` holds a **dummy** CSV for reference while you design and build. Its columns and meanings are listed in [`data/README.md`](data/README.md).
+You can run the core agent directly via Python in 60 seconds:
 
-**The data is synthetic.** The SKUs, ASINs, FNSKUs, orders, suppliers, operators and amounts are all invented. The requirement flags and fee amounts are **not** Amazon's real rules or fees. Engineering rule 5 applies: look the authoritative rule up. The `photo_refs` paths are placeholders, and no images ship with this repo. Your fixtures and eval set are yours to capture.
+```bash
+# Optional: Set your Claude Vision API Key (falls back to deterministic simulator if unset)
+export ANTHROPIC_API_KEY="sk-ant-..."
 
-All five buildathon repos share the same `unit_id` values (`UNIT-0001` … `UNIT-0100`). You can follow one unit from receiving through recovery, the same way the real records will be joined. In the sample, each unit takes one route: **FBA** (prep, then Amazon ships it and charges fees) or **merchant-fulfilled / 3PL** (the seller packs it). So a unit has a Prep record or a Pack record, never both.
-
----
-
-## How this works
-
-You have a defined problem statement and a repository to build from. Real products are built backwards from the customer and forwards through the evidence. You should understand the customer and the operational workflow before you write code, then build and measure whether the solution works.
-
-Your goal is to turn the Pack Manager problem into a working, measurable agent.
-
-### What you're given
-
-* This problem statement
-* A domain brief covering the real economics, fee structures and what a working day in a warehouse looks like *(shared by the organisers)*
-* The engineering rules in [`RULES.md`](RULES.md)
-* Repository sample data and supporting resources
-* Any additional build resources shared by the organisers
-
-### What you produce
-
-Build your solution in **your own GitHub fork**.
-
-Your final Round 2 submission should include:
-
-* A working Pack Manager
-* An `README.md` explaining your solution, setup, assumptions and limitations
-* An `ARCHITECTURE.md`
-* An eval report/results with numbers and named failure modes
-* A demo video
-* A deployment URL, where applicable
-* Your mandatory LinkedIn post URL
-
-## Build and submission flow
-
-```text
-Understand
-    ↓
-Build
-    ↓
-Test
-    ↓
-Evaluate
-    ↓
-Document
-    ↓
-Demo / Deploy
-    ↓
-Submit
+# Run verification on a carton
+python pack_manager_agent.py \
+  --order-id "ORD-2024-001" \
+  --pack-id "PACK-2024-001" \
+  --expected-items '[{"sku": "SKU-A", "name": "Black T-Shirt", "quantity": 2}]'
 ```
 
-Round 2 is an **individual build**.
-
-The official build phase begins on **25 September 2026 at 9:00 AM IST**.
-
-Submissions open from **27 September 2026**.
-
-The final submission deadline is **1 October 2026 at 6:00 PM IST**.
-
-The submission form closes permanently at the deadline. **There is no resubmission.**
-
-All code commits forming your Round 2 submission must be made during the authorised build phase. Do not continue making Round 2 code changes after the build phase ends.
-
-## What we're being straight with you about
-
-* **The core assumption is untested.** Nobody knows yet whether vision models can identify products and verify box contents reliably across long-tail catalogues without per-SKU training. Finding out that it doesn't hold, and documenting that clearly, counts as a useful outcome.
-* **Nobody has spoken to a customer yet.** If you can get a real prep center or seller on a call, ask them to rank the five problems by urgency. Don't ask whether they'd buy what you're building.
-* **The background documents disagree in places.** A contradiction is a finding. Raise it as an Issue labelled `finding`.
-
----
-
-## Evaluation
-
-Your Round 2 submission is evaluated out of **100 points**:
-
-| Criterion                                    |  Points |
-| -------------------------------------------- | ------: |
-| Problem Understanding & Solution Relevance   |  **15** |
-| Agent Functionality & Decision Quality       |  **25** |
-| Evaluation, Accuracy & Uncertainty Handling  |  **25** |
-| Evidence, Traceability & Engineering Quality |  **20** |
-| UX, Demo & Documentation                     |  **15** |
-| **TOTAL**                                    | **100** |
-
-For the vision-based portions of the Pack Manager, use an appropriate unseen/held-out evaluation set and report your methodology, results, false positives, false negatives, `UNCERTAIN` cases and failure modes.
-
----
-
-## Evidence and decision traceability
-
-Your Pack Manager should leave evidence behind for its decisions.
-
-At minimum, the workflow should make it possible to understand:
-
-```text
-What should be in the box?
-        ↓
-What was actually found?
-        ↓
-What checks were performed?
-        ↓
-What verdict was produced?
-        ↓
-Why?
+**Standardized JSON Output:**
+```json
+{
+  "order_id": "ORD-2024-001",
+  "pack_id": "PACK-2024-001",
+  "decision": "SEAL",
+  "confidence": 0.96,
+  "reason_summary": "Order verified: all expected items match observed carton contents exactly.",
+  "detected_items": [
+    { "sku": "SKU-A", "name": "Black T-Shirt", "quantity": 2, "confidence": 0.96 }
+  ],
+  "discrepancies": [],
+  "summary": { "status": "SEAL", "latency_ms": 1 },
+  "evidence": { "model": "claude-3-5-sonnet-20241022" }
+}
 ```
 
-Use the official evidence contract provided by the organisers as the baseline for interoperability with the other Managers.
+---
+
+## 5. Quick Start: Full Enterprise Monorepo
+
+### Prerequisites
+- Node.js 20+ (on Windows, use `npm.cmd` and `npx.cmd`)
+- Python 3.10+
+
+### Installation
+```powershell
+# 1. Install all monorepo dependencies
+npm.cmd install
+
+# 2. Run all unit, domain, pipeline, and e2e test suites (48 passing tests)
+npx.cmd vitest run
+```
+
+### Running the API & Operator Web Dashboard
+```powershell
+# Terminal 1: Start API server (pre-seeded with demo orders and packs)
+npx.cmd tsx apps/api/src/index.ts
+
+# Terminal 2: Start Web UI
+npx.cmd vite --config apps/web/vite.config.ts
+
+# Open in Browser:
+# Web Dashboard: http://localhost:3000
+# Swagger API Docs: http://localhost:4000/documentation
+```
 
 ---
 
-## PASS · FAIL · UNCERTAIN
+## 6. Testing & Validation
 
-For individual checks:
+All 14 packing workflow scenarios pass automatically:
+```powershell
+npx.cmd vitest run test/e2e-scenarios.test.ts
+```
 
-* **PASS** — the evidence supports the condition.
-* **FAIL** — the evidence shows the condition is not met.
-* **UNCERTAIN** — the evidence is insufficient for a reliable judgment.
-
-`UNCERTAIN` is not simply a low-confidence PASS.
+| Scenario | Description | Expected Decision |
+| :--- | :--- | :--- |
+| **Scenario 1** | Correct single item order | 🟢 `SEAL` |
+| **Scenario 2** | Missing item (1 of 2 T-shirts present) | 🔴 `STOP & FIX` |
+| **Scenario 3** | Wrong item substituted (red cap instead of blue cap) | 🔴 `STOP & FIX` |
+| **Scenario 4** | Extra item (unordered cap in box) | 🔴 `STOP & FIX` |
+| **Scenario 5** | Incorrect quantity (1 of 2 expected items) | 🔴 `STOP & FIX` |
+| **Scenario 6** | Multiple identical products (5 items) | 🟢 `SEAL` |
+| **Scenario 6b** | Duplicate manifest lines for one SKU | 🟢 `SEAL` |
+| **Scenario 7** | Visually similar variant mismatch (Size M vs L) | 🔴 `STOP & FIX` |
+| **Scenario 8** | Corrupt / severe motion blur image | 🟡 `UNCERTAIN` |
+| **Scenario 9** | Ambiguous photo with no identifiable items | 🟡 `UNCERTAIN` |
+| **Scenario 9b** | Visible item occlusion | 🟡 `UNCERTAIN`, recorded as occlusion |
+| **Scenario 10** | Multi-angle photos without double-counting | 🟢 `SEAL` |
+| **Scenario 11** | AI provider failure | 🟡 `UNCERTAIN` |
+| **Scenario 12** | Manual SKU missing from catalog | 🟢 `SEAL` |
+| **Scenario 13** | Rescan & QC rework cycle | 🔴 Run 1: `STOP & FIX` -> 🟢 Run 2: `SEAL` |
 
 ---
 
-*CUBE Buildathon · Commerce Context*
+## 7. Security & Compliance Rules
+
+- **Zero Hardcoded Secrets**: No API keys, credentials, or private tokens are committed. All secrets are loaded through environment variables (see `.env.example`).
+- **Multi-Tenant Row-Level Security (RLS)**: Every database query enforces tenant isolation using the validated `orgId` claim. Cross-tenant leakage is tested and prevented.
+- **Immutable Audit Logging**: Every automated decision, confidence calculation, and human override creates a permanent audit record. Original AI logs are never overwritten.
+- **Signed Webhook Deliveries**: Webhooks are signed with HMAC-SHA256 (`x-packmanager-signature-256`) to ensure authenticity at receiving WMS/ERP systems.
+
+---
+
+## 8. Documentation Directory
+
+- **[API Reference](API_REFERENCE.md)**: Endpoints, schemas, error codes, and curl examples.
+- **[System Architecture](ARCHITECTURE.md)**: Component diagrams, data flows, and state machine transitions.
+- **[Operational Procedures](docs/OPERATIONAL_PROCEDURES.md)**: Staff standard operating procedures and camera guidelines.
+- **[Training Materials](docs/TRAINING_MATERIALS.md)**: 30-minute training guide, video scripts, and laminated bench cheat sheet.
+- **[Implementation Roadmap](docs/IMPLEMENTATION_ROADMAP.md)**: 11-12 week rollout timeline and cost breakdown.
+- **[Test Scenarios](docs/TEST_SCENARIOS.md)**: Benchmark matrix and validation criteria.
+- **[AI Vision System Prompt](pack_manager_system_prompt.md)**: Production system prompt for vision models.

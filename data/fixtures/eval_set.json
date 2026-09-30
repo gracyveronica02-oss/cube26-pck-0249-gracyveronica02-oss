@@ -1,0 +1,100 @@
+[
+  {
+    "evalId": "EVAL-001",
+    "unitId": "UNIT-0001",
+    "orderLines": [{ "sku": "SKU-A", "quantity": 1, "attributes": { "color": "black", "size": "M" } }],
+    "observedDetections": [{ "label": "black t-shirt", "confidence": 0.96, "attributes": { "color": "black", "size": "M" }, "barcode": "111122223333" }],
+    "humanLabeler1": "SEAL",
+    "humanLabeler2": "SEAL",
+    "groundTruth": "SEAL"
+  },
+  {
+    "evalId": "EVAL-002",
+    "unitId": "UNIT-0002",
+    "orderLines": [{ "sku": "SKU-A", "quantity": 2, "attributes": { "color": "black", "size": "M" } }, { "sku": "SKU-B", "quantity": 1, "attributes": { "color": "blue" } }],
+    "observedDetections": [{ "label": "black t-shirt", "confidence": 0.95, "attributes": { "color": "black", "size": "M" }, "barcode": "111122223333" }, { "label": "black t-shirt", "confidence": 0.94, "attributes": { "color": "black", "size": "M" }, "barcode": "111122223333" }, { "label": "blue cap", "confidence": 0.93, "attributes": { "color": "blue" }, "barcode": "444455556666" }],
+    "humanLabeler1": "SEAL",
+    "humanLabeler2": "SEAL",
+    "groundTruth": "SEAL"
+  },
+  {
+    "evalId": "EVAL-003",
+    "unitId": "UNIT-0003",
+    "orderLines": [{ "sku": "SKU-B", "quantity": 1, "attributes": { "color": "blue" } }],
+    "observedDetections": [],
+    "humanLabeler1": "STOP_AND_FIX",
+    "humanLabeler2": "STOP_AND_FIX",
+    "groundTruth": "STOP_AND_FIX",
+    "failureType": "MISSING_ITEM"
+  },
+  {
+    "evalId": "EVAL-004",
+    "unitId": "UNIT-0004",
+    "orderLines": [{ "sku": "SKU-B", "quantity": 1, "attributes": { "color": "blue" } }],
+    "observedDetections": [{ "label": "red cap", "confidence": 0.94, "attributes": { "color": "red" }, "barcode": "777788889999" }],
+    "humanLabeler1": "STOP_AND_FIX",
+    "humanLabeler2": "STOP_AND_FIX",
+    "groundTruth": "STOP_AND_FIX",
+    "failureType": "WRONG_ITEM"
+  },
+  {
+    "evalId": "EVAL-005",
+    "unitId": "UNIT-0005",
+    "orderLines": [{ "sku": "SKU-A", "quantity": 2, "attributes": { "color": "black", "size": "M" } }],
+    "observedDetections": [{ "label": "black t-shirt", "confidence": 0.95, "attributes": { "color": "black", "size": "M" }, "barcode": "111122223333" }],
+    "humanLabeler1": "STOP_AND_FIX",
+    "humanLabeler2": "STOP_AND_FIX",
+    "groundTruth": "STOP_AND_FIX",
+    "failureType": "QUANTITY_MISMATCH"
+  },
+  {
+    "evalId": "EVAL-006",
+    "unitId": "UNIT-0006",
+    "orderLines": [{ "sku": "SKU-D-L", "quantity": 1, "attributes": { "color": "white", "size": "L" } }],
+    "observedDetections": [{ "label": "white t-shirt", "confidence": 0.94, "attributes": { "color": "white", "size": "M" } }],
+    "humanLabeler1": "STOP_AND_FIX",
+    "humanLabeler2": "STOP_AND_FIX",
+    "groundTruth": "STOP_AND_FIX",
+    "failureType": "VARIANT_MISMATCH"
+  },
+  {
+    "evalId": "EVAL-007",
+    "unitId": "UNIT-0007",
+    "orderLines": [{ "sku": "SKU-A", "quantity": 1, "attributes": { "color": "black", "size": "M" } }],
+    "imageQualityIssue": "Motion blur detected (score 42.1 < 100)",
+    "observedDetections": [],
+    "humanLabeler1": "UNCERTAIN",
+    "humanLabeler2": "UNCERTAIN",
+    "groundTruth": "STOP_AND_FIX",
+    "failureType": "POOR_IMAGE_QUALITY"
+  },
+  {
+    "evalId": "EVAL-008",
+    "unitId": "UNIT-0008",
+    "orderLines": [{ "sku": "SKU-A", "quantity": 1, "attributes": { "color": "black", "size": "M" } }],
+    "observedDetections": [{ "label": "black t-shirt", "confidence": 0.52, "attributes": { "color": "black" } }],
+    "humanLabeler1": "UNCERTAIN",
+    "humanLabeler2": "STOP_AND_FIX",
+    "groundTruth": "STOP_AND_FIX",
+    "failureType": "LOW_CONFIDENCE"
+  },
+  {
+    "evalId": "EVAL-009",
+    "unitId": "UNIT-0009",
+    "orderLines": [{ "sku": "SKU-C", "quantity": 2, "attributes": { "color": "red" } }],
+    "observedDetections": [{ "label": "red cap", "confidence": 0.95, "attributes": { "color": "red" }, "barcode": "777788889999" }, { "label": "red cap", "confidence": 0.95, "attributes": { "color": "red" }, "barcode": "777788889999" }],
+    "humanLabeler1": "SEAL",
+    "humanLabeler2": "SEAL",
+    "groundTruth": "SEAL"
+  },
+  {
+    "evalId": "EVAL-010",
+    "unitId": "UNIT-0010",
+    "orderLines": [{ "sku": "SKU-A", "quantity": 1, "attributes": { "color": "black", "size": "M" } }],
+    "observedDetections": [{ "label": "black t-shirt", "confidence": 0.95, "attributes": { "color": "black", "size": "M" }, "barcode": "111122223333" }, { "label": "blue cap", "confidence": 0.92, "attributes": { "color": "blue" }, "barcode": "444455556666" }],
+    "humanLabeler1": "STOP_AND_FIX",
+    "humanLabeler2": "STOP_AND_FIX",
+    "groundTruth": "STOP_AND_FIX",
+    "failureType": "EXTRA_ITEM"
+  }
+]

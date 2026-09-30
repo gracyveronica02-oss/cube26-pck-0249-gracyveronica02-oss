@@ -1,0 +1,65 @@
+{
+  "$schema": "https://cube-buildathon.org/schemas/v1/pack-evidence-record.json",
+  "stage": "03_PACK_MANAGER",
+  "eventId": "evt_01HZX879X01",
+  "unitId": "UNIT-0001",
+  "orgId": "org_demo_alpha",
+  "packId": "PACK-001",
+  "orderId": "ORD-001",
+  "capturedAt": "2026-09-25T14:32:00Z",
+  "operationalDecision": "STOP_AND_FIX",
+  "reasonSummary": "Missing SKU-B (Expected: 1, Detected: 0); Extra unexpected SKU-C detected in box",
+  "rulesEvaluated": [
+    { "rule": "IMAGE_QUALITY_CHECK", "verdict": "PASS" },
+    { "rule": "VISION_EXECUTION_CHECK", "verdict": "PASS" },
+    { "rule": "AMBIGUITY_CHECK", "verdict": "PASS" },
+    { "rule": "MISSING_ITEMS_CHECK", "verdict": "FAIL", "details": { "missing": ["SKU-B"] } },
+    { "rule": "WRONG_ITEMS_CHECK", "verdict": "FAIL", "details": { "wrong": ["SKU-C"] } },
+    { "rule": "QUANTITY_CHECK", "verdict": "PASS" },
+    { "rule": "CRITICAL_VARIANT_CHECK", "verdict": "PASS" },
+    { "rule": "CONFIDENCE_THRESHOLD_CHECK", "verdict": "PASS" }
+  ],
+  "expectedItems": [
+    { "sku": "SKU-A", "quantity": 2, "name": "Black T-Shirt", "criticalAttributes": ["color", "size"] },
+    { "sku": "SKU-B", "quantity": 1, "name": "Blue Cap", "criticalAttributes": ["color"] }
+  ],
+  "observedItems": [
+    { "sku": "SKU-A", "quantity": 2, "confidence": 0.94, "attributes": { "color": "black", "size": "M" } },
+    { "sku": "SKU-C", "quantity": 1, "confidence": 0.88, "attributes": { "color": "red" } }
+  ],
+  "discrepancies": [
+    {
+      "type": "MISSING_ITEM",
+      "expectedSku": "SKU-B",
+      "expectedQuantity": 1,
+      "detectedQuantity": 0
+    },
+    {
+      "type": "WRONG_ITEM",
+      "expectedSku": "SKU-B",
+      "detectedSku": "SKU-C",
+      "detectedQuantity": 1
+    }
+  ],
+  "photographicEvidence": {
+    "cameraAngles": ["TOP_DOWN"],
+    "originalImageUrls": [
+      "https://storage.cube-fulfillment.internal/orgs/org_demo_alpha/packs/PACK-001/original/IMG-01.jpg"
+    ],
+    "annotatedImageUrls": [
+      "https://storage.cube-fulfillment.internal/orgs/org_demo_alpha/packs/PACK-001/analysis/ANL-001/processed/IMG-01.jpg"
+    ],
+    "cropUrls": [
+      "https://storage.cube-fulfillment.internal/orgs/org_demo_alpha/packs/PACK-001/analysis/ANL-001/crops/DET-01.jpg",
+      "https://storage.cube-fulfillment.internal/orgs/org_demo_alpha/packs/PACK-001/analysis/ANL-001/crops/DET-02.jpg"
+    ]
+  },
+  "provenance": {
+    "modelProvider": "mock-provider",
+    "modelName": "pack-vision-v1",
+    "modelVersion": "2026.09.25",
+    "verificationDurationMs": 1420,
+    "packingStation": "STATION-01",
+    "operatorId": "operator_jane"
+  }
+}
