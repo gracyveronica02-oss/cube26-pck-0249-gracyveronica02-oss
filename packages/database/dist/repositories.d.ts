@@ -127,6 +127,7 @@ export declare class InMemoryRepositories implements IPackRepository, IOrderRepo
     updateJobStatus(orgId: string, jobId: string, status: ProcessingJobRecord['status'], errorMessage?: string): Promise<void>;
     recordEvent(event: AuditEventRecord): Promise<void>;
     listEventsForEntity(orgId: string, entityType: string, entityId: string): Promise<AuditEventRecord[]>;
+    listEventsForOrg(orgId: string): Promise<AuditEventRecord[]>;
     clear(): void;
 }
 //# sourceMappingURL=repositories.d.ts.map

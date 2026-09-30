@@ -86,7 +86,7 @@ const analysesRoutes = async (fastify, opts) => {
     fastify.get('/audits', async (request, reply) => {
         const orgId = request.auth.orgId;
         const query = request.query;
-        let events = repos.auditEvents.filter(e => e.orgId === orgId);
+        let events = await repos.listEventsForOrg(orgId);
         if (query.entityId) {
             events = events.filter(e => e.entityId === query.entityId);
         }

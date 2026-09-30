@@ -381,6 +381,12 @@ export class InMemoryRepositories implements
       .map(e => JSON.parse(JSON.stringify(e)));
   }
 
+  public async listEventsForOrg(orgId: string): Promise<AuditEventRecord[]> {
+    return this.auditEvents
+      .filter(event => event.orgId === orgId)
+      .map(event => JSON.parse(JSON.stringify(event)));
+  }
+
   public clear(): void {
     this.packs.clear();
     this.orders.clear();

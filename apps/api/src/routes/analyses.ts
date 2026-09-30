@@ -121,7 +121,7 @@ export const analysesRoutes: FastifyPluginAsync<AnalysesRouteOptions> = async (
       limit?: string;
     };
 
-    let events = repos.auditEvents.filter(e => e.orgId === orgId);
+    let events = await repos.listEventsForOrg(orgId);
 
     if (query.entityId) {
       events = events.filter(e => e.entityId === query.entityId);

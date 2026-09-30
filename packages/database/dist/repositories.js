@@ -210,6 +210,11 @@ class InMemoryRepositories {
             .filter(e => e.orgId === orgId && e.entityType === entityType && e.entityId === entityId)
             .map(e => JSON.parse(JSON.stringify(e)));
     }
+    async listEventsForOrg(orgId) {
+        return this.auditEvents
+            .filter(event => event.orgId === orgId)
+            .map(event => JSON.parse(JSON.stringify(event)));
+    }
     clear() {
         this.packs.clear();
         this.orders.clear();
