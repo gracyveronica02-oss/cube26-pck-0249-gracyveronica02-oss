@@ -1,9 +1,9 @@
-import { buildServer } from '../../apps/api/src/server.js';
+import { buildServer } from '../apps/api/src/server.js';
 import {
   InMemoryRepositories,
   InMemoryObjectStorage
 } from '@pack-manager/database';
-import { seedDemoData } from '../../apps/api/src/seed.js';
+import { seedDemoData } from '../apps/api/src/seed.js';
 
 let serverPromise: Promise<any> | null = null;
 
