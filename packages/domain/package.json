@@ -17,5 +17,8 @@
     "@pack-manager/config": "*",
     "@pack-manager/shared": "*",
     "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
   }
 }
