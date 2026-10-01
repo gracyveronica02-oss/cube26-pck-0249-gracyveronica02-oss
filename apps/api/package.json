@@ -11,8 +11,7 @@
     }
   },
   "scripts": {
-    "build": "npx --yes -p 
-     typescript@5.9.3 tsc",
+    "build": "npx --yes -p typescript@5.9.3 tsc",
     "start": "node dist/index.js"
   },
   "dependencies": {
