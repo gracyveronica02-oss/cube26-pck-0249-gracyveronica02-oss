@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ApiHeaders } from '../services/api';
+import { ApiHeaders, api } from '../services/api';
 import { CheckCircle, AlertOctagon, Clock, Layers, ArrowRight } from 'lucide-react';
 
 interface DashboardPageProps {
@@ -15,29 +15,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ auth, onSelectPack
   const loadMetrics = () => {
     setLoading(true);
     setError(null);
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => controller.abort(), 8000);
-    fetch('/api/v1/dashboard/metrics', {
-      headers: {
-        'x-org-id': auth.orgId,
-        'x-user-role': auth.role,
-        'x-user-id': auth.userId,
-      },
-      signal: controller.signal,
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`API ${res.status}`);
-        return res.json();
-      })
+    api.getMetrics(auth)
       .then((data) => {
         setMetrics(data);
         setLoading(false);
       })
       .catch(() => {
-        setError('Cannot reach the Pack Manager API on port 4000. Start it, then retry — or open Verify Carton.');
+        setError('Cannot reach the Pack Manager API. Make sure the backend is deployed and the API URL is configured.');
         setLoading(false);
-      })
-      .finally(() => window.clearTimeout(timer));
+      });
   };
 
   useEffect(() => {
