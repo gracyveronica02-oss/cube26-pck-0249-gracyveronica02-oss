@@ -12,7 +12,13 @@ export class PackManagerApiClient {
   }
 
   private async readResponse(res: Response) {
-    const data = await res.json();
+    const text = await res.text();
+    let data: any = {};
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = { message: text || `API request failed (${res.status})` };
+    }
     if (!res.ok) {
       throw new Error(data.message || data.error || `API request failed (${res.status})`);
     }
