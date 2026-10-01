@@ -3,8 +3,8 @@ services:
     name: pack-manager-api
     runtime: node
     plan: free
-    buildCommand: npm ci && npm run build --workspace=@pack-manager/api
-    startCommand: npm run start --workspace=@pack-manager/api
+    buildCommand: npm ci && npm run build --workspaces --if-present
+    startCommand: node apps/api/dist/index.js
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
