@@ -48,7 +48,7 @@ export class PackManagerApiClient {
     return res.json();
   }
 
-  public async getPack(auth: ApiHeaders, packId: string) {
+  public async getHealth() {\n    const res = await fetch(this.baseUrl + '/health');\n    return this.readResponse(res);\n  }\n\n  public async getPack(auth: ApiHeaders, packId: string) {
     const res = await fetch(`${this.baseUrl}/api/v1/packs/${packId}`, {
       headers: this.getHeaders(auth),
     });
