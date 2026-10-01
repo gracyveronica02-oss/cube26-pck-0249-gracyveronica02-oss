@@ -7,7 +7,7 @@ export interface ApiHeaders {
 export class PackManagerApiClient {
   private baseUrl: string;
 
-  constructor(baseUrl = '') {
+  constructor(baseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')) {
     this.baseUrl = baseUrl;
   }
 
