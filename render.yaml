@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: pack-manager-api
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build --workspace=@pack-manager/api
+    startCommand: npm run start --workspace=@pack-manager/api
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
