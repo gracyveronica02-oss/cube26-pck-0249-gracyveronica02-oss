@@ -3,6 +3,11 @@
   "buildCommand": "npm run build",
   "installCommand": "npm ci --include=dev",
   "outputDirectory": "apps/web/dist",
+  "functions": {
+    "api/[...path].ts": {
+      "runtime": "nodejs22.x"
+    }
+  },
   "env": {
     "NODE_OPTIONS": "--max-old-space-size=4096"
   }
