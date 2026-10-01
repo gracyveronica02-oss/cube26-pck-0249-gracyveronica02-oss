@@ -125,6 +125,8 @@ export const UploadVerifyPage: React.FC<UploadVerifyPageProps> = ({ auth, onSele
   }, [catalogProducts]);
 
   const ingestFile = (file: File) => {
+    if (!file.type.startsWith('image/')) { setError('Please select an image file for the carton photograph.'); return; }
+    if (file.size > 10 * 1024 * 1024) { setError('The carton photograph must be 10 MB or smaller.'); return; }
     const source = URL.createObjectURL(file);
     const image = new Image();
     image.onload = () => {
@@ -273,6 +275,7 @@ export const UploadVerifyPage: React.FC<UploadVerifyPageProps> = ({ auth, onSele
   };
 
   const startScan = async () => {
+    if (scanning) return;
     setError(null);
     setScanHint(null);
     const Detector = (window as unknown as { BarcodeDetector?: new (opts: { formats: string[] }) => { detect: (src: CanvasImageSource) => Promise<Array<{ rawValue: string }>> } }).BarcodeDetector;
@@ -380,14 +383,17 @@ export const UploadVerifyPage: React.FC<UploadVerifyPageProps> = ({ auth, onSele
           if (anlData?.error) throw new Error(anlData.message || 'Could not read verification status');
           const list = anlData.analyses || [];
           if (list.length > 0) {
-            const latest = list[list.length - 1];
-            const detail = await api.getAnalysis(auth, latest.analysisId);
-            if (detail?.error || !detail.analysis) {
-              throw new Error(detail?.message || 'Verification completed but its result could not be loaded');
+            const latest = [...list].sort((a: any, b: any) => (b.analysisNumber || 0) - (a.analysisNumber || 0))[0];
+            if (latest.status === 'FAILED') throw new Error(latest.failureReason || latest.errorMessage || 'The verification worker reported a failed analysis');
+            if (latest.status !== 'COMPLETED') {
+              setAnalysisStep('4/4 Verification is processing (' + (latest.status || 'QUEUED') + ')...');
+            } else {
+              const detail = await api.getAnalysis(auth, latest.analysisId);
+              if (detail?.error || !detail.analysis) throw new Error(detail?.message || 'Verification completed but its result could not be loaded');
+              setAnalysisResult(detail.analysis);
+              setAnalyzing(false);
+              return;
             }
-            setAnalysisResult(detail.analysis);
-            setAnalyzing(false);
-            return;
           }
           lastPollError = '';
         } catch (err: any) {
