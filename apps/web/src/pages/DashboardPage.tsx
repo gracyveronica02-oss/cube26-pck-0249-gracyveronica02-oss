@@ -11,23 +11,32 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ auth, onSelectPack
   const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [recentPacks, setRecentPacks] = useState<any[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const loadMetrics = () => {
-    setLoading(true);
+  const loadDashboard = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
+    else setRefreshing(true);
     setError(null);
-    api.getMetrics(auth)
-      .then((data) => {
-        setMetrics(data);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError('Cannot reach the Pack Manager API. Make sure the backend is deployed and the API URL is configured.');
-        setLoading(false);
-      });
+    try {
+      const [metricsData, packsData] = await Promise.all([
+        api.getMetrics(auth),
+        api.listPacks(auth, { }),
+      ]);
+      setMetrics(metricsData);
+      setRecentPacks((packsData?.packs || []).slice(0, 8));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Cannot reach the Pack Manager API.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   };
 
   useEffect(() => {
-    loadMetrics();
+    void loadDashboard();
+    const interval = window.setInterval(() => void loadDashboard(false), 15000);
+    return () => window.clearInterval(interval);
   }, [auth]);
 
   if (loading) {
@@ -38,20 +47,25 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ auth, onSelectPack
     return (
       <div className="container" style={{ textAlign: 'center', padding: '60px' }}>
         <p style={{ color: '#fca5a5' }}>{error || 'Metrics unavailable.'}</p>
-        <button className="btn" onClick={loadMetrics} style={{ marginTop: '12px' }}>Retry</button>
+        <button className="btn" onClick={() => void loadDashboard()} style={{ marginTop: '12px' }}>Retry</button>
       </div>
     );
   }
 
   return (
     <div className="container">
-      <div style={{ marginBottom: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', marginBottom: '24px' }}>
+        <div>
         <h1 style={{ fontSize: '1.875rem', fontWeight: 800, margin: '0 0 8px 0' }}>
           Outbound Fulfillment Verification Overview
         </h1>
         <p style={{ color: '#94a3b8', margin: 0 }}>
           Real-time AI camera pack verification across packing stations.
         </p>
+        </div>
+        <button className="btn btn-secondary" onClick={() => void loadDashboard(false)} disabled={refreshing}>
+          {refreshing ? 'Refreshing…' : 'Refresh data'}
+        </button>
       </div>
 
       {/* Metrics Cards */}
@@ -133,6 +147,33 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ auth, onSelectPack
             Latest analysis per carton; single-shot coverage
           </div>
         </div>
+      </div>
+
+      {/* Recent Packs */}
+      <div className="table-card" style={{ marginBottom: '24px' }}>
+        <div className="table-header">
+          <div>
+            <div className="table-title">Recent Packs</div>
+            <div style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '4px' }}>Live from the current tenant</div>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Pack ID</th><th>Order</th><th>Station</th><th>Status</th><th>Updated</th><th></th></tr></thead>
+          <tbody>
+            {recentPacks.length === 0 ? (
+              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '28px', color: '#64748b' }}>No packs have been created yet.</td></tr>
+            ) : recentPacks.map((pack) => (
+              <tr key={pack.packId}>
+                <td style={{ fontWeight: 700 }}>{pack.packId}</td>
+                <td>{pack.orderId}</td>
+                <td>{pack.packingStation || '—'}</td>
+                <td><span className={`badge ${pack.status}`}>{String(pack.status || 'UNKNOWN').replaceAll('_', ' ')}</span></td>
+                <td>{pack.updatedAt ? new Date(pack.updatedAt).toLocaleString() : '—'}</td>
+                <td><button className="btn btn-secondary" style={{ padding: '6px 10px' }} onClick={() => onSelectPack(pack.packId)}><ArrowRight size={14} /> Open</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* Discrepancy Breakdown Table */}
