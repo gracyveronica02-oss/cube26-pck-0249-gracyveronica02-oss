@@ -4,6 +4,7 @@ import path from 'path';
 
 export default defineConfig({
   root: __dirname,
+  base: '/cube26-pck-0249-gracyveronica02-oss/',
   plugins: [react()],
   resolve: {
     alias: {
