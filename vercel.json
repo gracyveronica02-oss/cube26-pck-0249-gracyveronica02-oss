@@ -11,6 +11,11 @@
       "handle": "filesystem"
     },
     {
+      "src": "^/health$",
+      "dest": "/api/health",
+      "check": true
+    },
+    {
       "src": "^/api/(.*)$",
       "dest": "/api/[...path]?...path=$1",
       "check": true

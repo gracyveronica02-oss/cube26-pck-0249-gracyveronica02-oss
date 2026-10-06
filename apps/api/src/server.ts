@@ -88,6 +88,7 @@ export function buildServer(options?: ServerOptions): FastifyInstance {
 
   // Register Health Routes
   fastify.register(healthRoutes);
+  fastify.register(healthRoutes, { prefix: '/api' });
 
   // Register Core API v1 Routes
   fastify.register(async (apiV1) => {

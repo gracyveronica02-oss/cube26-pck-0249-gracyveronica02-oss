@@ -481,7 +481,7 @@ export const UploadVerifyPage: React.FC<UploadVerifyPageProps> = ({ auth, onSele
           <video ref={videoRef} muted playsInline autoPlay style={{ width: '100%', maxHeight: '220px', borderRadius: '8px', background: '#000', marginBottom: '12px' }} />
         )}
         <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.85rem', marginBottom: '6px' }}>Enter manually</label>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="order-lookup-row" style={{ display: 'flex', gap: '8px' }}>
           <input
             type="text"
             value={manualCode}
@@ -502,7 +502,7 @@ export const UploadVerifyPage: React.FC<UploadVerifyPageProps> = ({ auth, onSele
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+      <div className="verify-workflow-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
         <div style={{ background: '#1e293b', padding: '20px', borderRadius: '10px', border: '1px solid #334155' }}>
           <h2 style={{ fontSize: '1.1rem', fontWeight: 700, margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Camera size={18} color="#38bdf8" />
@@ -562,7 +562,7 @@ export const UploadVerifyPage: React.FC<UploadVerifyPageProps> = ({ auth, onSele
               </span>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+          <div className="manifest-meta-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
             <div>
               <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.85rem', marginBottom: '4px' }}>Carton LPN</label>
               <input type="text" value={unitId} onChange={(e) => setUnitId(e.target.value)} style={{ width: '100%', padding: '8px 10px', background: '#0f172a', border: '1px solid #475569', borderRadius: '6px', color: '#fff' }} />
@@ -609,7 +609,7 @@ export const UploadVerifyPage: React.FC<UploadVerifyPageProps> = ({ auth, onSele
 
           <div style={{ background: '#0f172a', padding: '12px', borderRadius: '6px', border: '1px solid #334155' }}>
             {lineItems.map((item, idx) => (
-              <div key={idx} style={{ display: 'grid', gridTemplateColumns: '42px minmax(90px, 1fr) minmax(110px, 1.2fr) minmax(80px, 0.8fr) 66px 32px', gap: '6px', marginBottom: '8px', alignItems: 'center' }}>
+              <div key={idx} className="manifest-product-row" style={{ display: 'grid', gridTemplateColumns: '42px minmax(90px, 1fr) minmax(110px, 1.2fr) minmax(80px, 0.8fr) 66px 32px', gap: '6px', marginBottom: '8px', alignItems: 'center' }}>
                 {item.referenceImage ? (
                   <img src={item.referenceImage} alt={`${item.productName} reference`} style={{ width: '38px', height: '38px', objectFit: 'contain', borderRadius: '4px', background: '#fff' }} />
                 ) : (

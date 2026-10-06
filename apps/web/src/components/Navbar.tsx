@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, ShieldAlert, LayoutDashboard, Tag, Layers, Camera } from 'lucide-react';
+import { Package, ShieldAlert, LayoutDashboard, Tag, Layers, Camera, Moon, Sun } from 'lucide-react';
 import { ApiHeaders } from '../services/api';
 
 interface NavbarProps {
@@ -8,6 +8,8 @@ interface NavbarProps {
   auth: ApiHeaders;
   onAuthChange: (auth: ApiHeaders) => void;
   qcCount: number;
+  theme: 'light' | 'dark';
+  onThemeToggle: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -16,93 +18,83 @@ export const Navbar: React.FC<NavbarProps> = ({
   auth,
   onAuthChange,
   qcCount,
+  theme,
+  onThemeToggle,
 }) => {
+  const tabs = [
+    { id: 'verify', label: 'Verify Carton', icon: Camera },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'qc-queue', label: 'QC Rework Queue', icon: ShieldAlert, count: qcCount },
+    { id: 'pack-detail', label: 'Pack Detail', icon: Layers },
+    { id: 'catalog', label: 'Product Catalog', icon: Tag },
+  ];
+
   return (
-    <header className="header">
-      <div className="logo-area">
-        <Package className="w-6 h-6 text-sky-400" />
-        <span>PackManager AI</span>
-      </div>
-
-      <nav className="nav-links">
-        <button
-          className={`nav-button ${currentTab === 'verify' ? 'active' : ''}`}
-          onClick={() => onTabChange('verify')}
-        >
-          <Camera size={18} />
-          <span>Verify Carton</span>
-        </button>
-
-        <button
-          className={`nav-button ${currentTab === 'dashboard' ? 'active' : ''}`}
-          onClick={() => onTabChange('dashboard')}
-        >
-          <LayoutDashboard size={18} />
-          <span>Dashboard</span>
-        </button>
-
-        <button
-          className={`nav-button ${currentTab === 'qc-queue' ? 'active' : ''}`}
-          onClick={() => onTabChange('qc-queue')}
-        >
-          <ShieldAlert size={18} />
-          <span>QC Rework Queue</span>
-          {qcCount > 0 && (
-            <span style={{
-              background: '#ef4444',
-              color: '#fff',
-              fontSize: '0.75rem',
-              padding: '2px 6px',
-              borderRadius: '999px',
-              fontWeight: 'bold',
-            }}>
-              {qcCount}
-            </span>
-          )}
-        </button>
-
-        <button
-          className={`nav-button ${currentTab === 'pack-detail' ? 'active' : ''}`}
-          onClick={() => onTabChange('pack-detail')}
-        >
-          <Layers size={18} />
-          <span>Pack Detail</span>
-        </button>
-
-        <button
-          className={`nav-button ${currentTab === 'catalog' ? 'active' : ''}`}
-          onClick={() => onTabChange('catalog')}
-        >
-          <Tag size={18} />
-          <span>Product Catalog</span>
-        </button>
-      </nav>
-
-      <div className="tenant-selector">
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', fontSize: '0.75rem', color: '#94a3b8' }}>
-          <span>Tenant (RLS)</span>
-          <select
-            value={auth.orgId}
-            onChange={(e) => onAuthChange({ ...auth, orgId: e.target.value })}
-          >
-            <option value="org_demo_alpha">org_demo_alpha</option>
-            <option value="org_demo_bravo">org_demo_bravo</option>
-          </select>
+    <>
+      <aside className="sidebar" aria-label="Pack Manager navigation">
+        <div className="sidebar-logo">
+          <span className="logo-icon"><Package size={21} /></span>
+          <span>PackManager AI</span>
         </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', fontSize: '0.75rem', color: '#94a3b8' }}>
-          <span>Role (RBAC)</span>
-          <select
-            value={auth.role}
-            onChange={(e) => onAuthChange({ ...auth, role: e.target.value })}
-          >
-            <option value="QC_OPERATOR">QC_OPERATOR</option>
-            <option value="SUPERVISOR">SUPERVISOR</option>
-            <option value="ADMIN">ADMIN</option>
-            <option value="VIEWER">VIEWER</option>
-          </select>
-        </div>
-      </div>
-    </header>
+        <nav className="sidebar-nav" aria-label="Main navigation">
+          {tabs.map(({ id, label, icon: Icon, count }) => (
+            <button
+              key={id}
+              type="button"
+              aria-label={label}
+              aria-current={currentTab === id ? 'page' : undefined}
+              className={`nav-button ${currentTab === id ? 'active' : ''}`}
+              onClick={() => onTabChange(id)}
+            >
+              <Icon size={18} />
+              <span className="nav-label">{label}</span>
+              {count != null && count > 0 && <span className="nav-count">{count}</span>}
+            </button>
+          ))}
+        </nav>
+        <div className="sidebar-footer">Outbound verification workspace</div>
+      </aside>
+      <header className="topbar">
+          <div className="topbar-title">Pack Manager</div>
+          <div className="topbar-right">
+            <div className="tenant-selector">
+              <label className="tenant-control">
+                Tenant
+                <select
+                  aria-label="Tenant"
+                  value={auth.orgId}
+                  onChange={(e) => onAuthChange({ ...auth, orgId: e.target.value })}
+                >
+                  <option value="org_demo_alpha">org_demo_alpha</option>
+                  <option value="org_demo_bravo">org_demo_bravo</option>
+                </select>
+              </label>
+              <label className="tenant-control">
+                Role
+                <select
+                  aria-label="Role"
+                  value={auth.role}
+                  onChange={(e) => onAuthChange({ ...auth, role: e.target.value })}
+                >
+                  <option value="QC_OPERATOR">QC_OPERATOR</option>
+                  <option value="SUPERVISOR">SUPERVISOR</option>
+                  <option value="ADMIN">ADMIN</option>
+                  <option value="VIEWER">VIEWER</option>
+                </select>
+              </label>
+            </div>
+            <button
+              type="button"
+              className="theme-toggle"
+              onClick={onThemeToggle}
+              aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+              title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+            >
+              {theme === 'light' ? <Moon size={15} aria-hidden="true" /> : <Sun size={15} aria-hidden="true" />}
+              {theme === 'light' ? 'Dark' : 'Light'}
+            </button>
+          </div>
+      </header>
+    </>
   );
 };
